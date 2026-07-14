@@ -81,7 +81,7 @@ jobs:
             xxx=xxx
           # 包含的包
           include-package-data: |
-            django=django
+            django
           include-package: |
             bomiot
             django
