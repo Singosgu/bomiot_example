@@ -12,14 +12,10 @@ from PIL import Image, ImageTk
 import requests
 
 app_name = "Bomiot"
-version = "1.0.1"
+version = "1.0.25"
 
 if __name__ == "__main__":
-    print(1)
-    sleep(20)
     os.environ.setdefault("RUN_LAN", "true")
-    print(2)
-    sleep(20)
     # 欢迎页
     splash = tk.Tk()
     window_width = 675

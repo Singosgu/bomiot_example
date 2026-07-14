@@ -81,7 +81,29 @@ jobs:
             xxx=xxx
           # 包含的包
           include-package-data: |
+            bomiot
             django
+            fastapi
+            flask
+            orjson
+            uvicorn
+            pandas
+            openpyxl
+            watchdog
+            tomlkit
+            psutil
+            xlsxwriter
+            requests
+            httptools
+            aiofiles
+            starlette
+            bomiot_asgi
+            bomiot_message
+            django_filters
+            rest_framework
+            rest_framework_csv
+            django_apscheduler
+            corsheaders
           include-package: |
             bomiot
             django
@@ -146,6 +168,30 @@ jobs:
             setup.ini=setup.ini
             splash.png=splash.png
           # 包含的包
+          include-package-data: |
+            bomiot
+            django
+            fastapi
+            flask
+            orjson
+            uvicorn
+            pandas
+            openpyxl
+            watchdog
+            tomlkit
+            psutil
+            xlsxwriter
+            requests
+            httptools
+            aiofiles
+            starlette
+            bomiot_asgi
+            bomiot_message
+            django_filters
+            rest_framework
+            rest_framework_csv
+            django_apscheduler
+            corsheaders
           include-package: |
             bomiot
             django
@@ -208,6 +254,30 @@ jobs:
             setup.ini=setup.ini
             splash.png=splash.png
           # 包含的包
+          include-package-data: |
+            bomiot
+            django
+            fastapi
+            flask
+            orjson
+            uvicorn
+            pandas
+            openpyxl
+            watchdog
+            tomlkit
+            psutil
+            xlsxwriter
+            requests
+            httptools
+            aiofiles
+            starlette
+            bomiot_asgi
+            bomiot_message
+            django_filters
+            rest_framework
+            rest_framework_csv
+            django_apscheduler
+            corsheaders
           include-package: |
             bomiot
             django
