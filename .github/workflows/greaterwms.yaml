@@ -75,6 +75,7 @@ jobs:
           include-data-files: |
             setup.ini=setup.ini
             splash.png=splash.png
+            - "django/contrib/auth/common-passwords.txt.gz"
           # 包含的数据目录
           include-raw-dir: |
             greaterwms=greaterwms
