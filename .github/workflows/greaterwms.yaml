@@ -128,7 +128,6 @@ jobs:
             rest_framework_csv
             django_apscheduler
             corsheaders
-            production
           # 包含的模块
           include-module: |
             django.core.management
