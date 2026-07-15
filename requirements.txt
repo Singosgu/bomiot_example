@@ -5,7 +5,7 @@ anyio==4.14.2
 APScheduler==3.11.3
 asgiref==3.11.1
 blinker==1.9.0
-bomiot==1.1.26
+bomiot==1.1.27
 bomiot_asgi==0.5.20
 bomiot_message==0.4.5
 certifi==2026.6.17
