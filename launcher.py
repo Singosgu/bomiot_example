@@ -4,8 +4,7 @@ import uvicorn
 import socket
 import webbrowser
 import threading
-from bomiot_token import encrypt_info
-from os.path import join, exists 
+from os.path import join, exists
 from os import getcwd
 import tkinter as tk
 from PIL import Image, ImageTk
