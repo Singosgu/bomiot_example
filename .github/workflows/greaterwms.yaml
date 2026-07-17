@@ -77,7 +77,6 @@ jobs:
             splash.png=splash.png
           # 包含的数据目录
           include-raw-dir: |
-            greaterwms=greaterwms
             xxx=xxx
           # 包含的包
           include-package-data: |
