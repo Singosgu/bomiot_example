@@ -104,6 +104,7 @@ jobs:
             rest_framework_csv
             django_apscheduler
             corsheaders
+            greaterwms
           include-package: |
             bomiot
             django
@@ -128,7 +129,7 @@ jobs:
             rest_framework_csv
             django_apscheduler
             corsheaders
-            bomiot_test
+            greaterwms
           # 包含的模块
           include-module: |
             django.core.management
