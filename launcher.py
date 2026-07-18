@@ -67,6 +67,8 @@ if __name__ == "__main__":
     # 设置 Django 环境变量
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bomiot.server.server.settings")
     os.environ.setdefault("RUN_MAIN", "true")
+    os.environ.setdefault("IS_LAN", "true")
+    os.environ.setdefault('WORKERS', str(workers))
     import django
     django.setup()
     
@@ -120,8 +122,7 @@ if __name__ == "__main__":
     print('正在启动系统')
     
     # 启动 Django 开发服务器
-    os.environ.setdefault("IS_LAN", "true")
-    os.environ.setdefault('WORKERS', str(workers))
+
     print('系统启动成功')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(('8.8.8.8', 80))
