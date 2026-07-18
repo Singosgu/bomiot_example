@@ -13,13 +13,10 @@ import requests
 
 app_name = "Bomiot"
 version = "1.0.25"
+port = 8008
+workers = 1
 
 if __name__ == "__main__":
-    print(1)
-    sleep(10)
-    os.environ.setdefault("RUN_LAN", "true")
-    print(2)
-    sleep(20)
     # 欢迎页
     splash = tk.Tk()
     window_width = 675
@@ -124,6 +121,7 @@ if __name__ == "__main__":
     
     # 启动 Django 开发服务器
     os.environ.setdefault("IS_LAN", "true")
+    os.environ.setdefault('WORKERS', str(workers))
     print('系统启动成功')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(('8.8.8.8', 80))
@@ -153,8 +151,8 @@ if __name__ == "__main__":
     uvicorn.run(
             "bomiot_asgi:application",
             host='0.0.0.0',
-            port=8008,
-            workers=1,
+            port=port,
+            workers=workers,
             log_level="info",
             uds=None,
             ssl_keyfile=None,
