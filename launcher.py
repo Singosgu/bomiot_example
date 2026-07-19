@@ -1,4 +1,5 @@
-import os
+import os, sys
+from pathlib import Path
 from time import sleep
 import uvicorn
 import socket
@@ -11,8 +12,8 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import requests
 
-app_name = "Bomiot"
-version = "1.0.25"
+app_name = "GreaterWMS"
+version = "3.0.0"
 port = 8008
 workers = 1
 
@@ -69,6 +70,9 @@ if __name__ == "__main__":
     os.environ.setdefault("RUN_MAIN", "true")
     os.environ.setdefault("IS_LAN", "true")
     os.environ.setdefault('WORKERS', str(workers))
+    lockfile = Path(join(os.path.dirname(sys.executable), 'bomiot_ready.lock'))
+    if lockfile.exists():
+        lockfile.unlink()
     import django
     django.setup()
     
