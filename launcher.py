@@ -77,16 +77,17 @@ if __name__ == "__main__":
     django.setup()
     
     # 生成auth_key.py
-    path = join(getcwd(), 'auth_key.py')
-    if not exists(join(path)):
-        while True:
-            key_code = encrypt_info()
-            if '/' in key_code:
-                continue
-            else:
-                break
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(f'KEY = "{key_code}"\n')
+    auth_key_path = Path(join(os.path.dirname(sys.executable), 'auth_key.py'))
+    if auth_key_path.exists():
+        auth_key_path.unlink()
+    while True:
+        key_code = encrypt_info()
+        if '/' in key_code:
+            continue
+        else:
+            break
+    with open(auth_key_path, "w", encoding="utf-8") as f:
+        f.write(f'KEY = "{key_code}"\n')
 
     from django.core.management import call_command
     from django.apps import apps
