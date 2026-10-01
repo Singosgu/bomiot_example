@@ -1,6 +1,8 @@
 name: Bomiot Build
 
 env:
+  APP_NAME: "GreaterWMS"
+  BASE_VERSION: "3.0.0"
   COMMUNITY_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqCKStJYJO21-Mcx4MyJw5lQABNnjUH2mBlA=="
   SPONSOR_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqGLuvJoRPwODFiW18OLrz9DeKBYKoNTY="
 
@@ -44,6 +46,10 @@ jobs:
           PYTHONPATH: "${{ github.workspace }}${{ runner.os == 'Windows' && ';' || ':' }}${{ github.workspace }}/bomiot"
           PYTHONIOENCODING: "utf-8"
 
+      - name: Remove intermediate .build artifacts
+        shell: bash
+        run: find build -name ".build" -exec rm -rf {} + 2>/dev/null || true
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -51,4 +57,6 @@ jobs:
           path: |
             build/manifest-*.json
             build/*/
+            !build/**/.build
+            !build/**/.build/**
           include-hidden-files: true
