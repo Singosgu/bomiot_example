@@ -1,0 +1,54 @@
+name: Bomiot Build
+
+env:
+  COMMUNITY_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqCKStJYJO21-Mcx4MyJw5lQABNnjUH2mBlA=="
+  SPONSOR_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqGLuvJoRPwODFiW18OLrz9DeKBYKoNTY="
+
+# APP_NAME / BASE_VERSION are read from launcher.py by `bomiot build` itself.
+# All Nuitka parameters, manifest generation, node_modules exclusion,
+# sponsor verification, and build.json are handled by `bomiot build`.
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-22.04]
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: 'x64'
+          cache: 'pip'
+          cache-dependency-path: |
+            **/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Bomiot Build
+        run: bomiot build
+        env:
+          PYTHONPATH: "${{ github.workspace }}${{ runner.os == 'Windows' && ';' || ':' }}${{ github.workspace }}/bomiot"
+          PYTHONIOENCODING: "utf-8"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ env.BASE_VERSION }}-${{ runner.os }}
+          path: |
+            build/manifest-*.json
+            build/*/
+          include-hidden-files: true
