@@ -53,8 +53,3 @@ jobs:
             build/manifest-*.json
             build/*/
           include-hidden-files: true
-
-  SPONSOR_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqGLuvJoRPwODFiW18OLrz9DeKBYKoNTY="
-  COMMUNITY_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqCKStJYJO21-Mcx4MyJw5lQABNnjUH2mBlA=="
-  APP_NAME: "GreaterWMS"
-  BASE_VERSION: "3.0.0"
