@@ -1,4 +1,10 @@
 name: Bomiot Build
+env:
+  COMMUNITY_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqCKStJYJO21-Mcx4MyJw5lQABNnjUH2mBlA=="
+  SPONSOR_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqGLuvJoRPwODFiW18OLrz9DeKBYKoNTY="
+
+  APP_NAME: "GreaterWMS"
+  BASE_VERSION: "3.0.0"
 
 # APP_NAME / BASE_VERSION are read from launcher.py by `bomiot build` itself.
 # All Nuitka parameters, manifest generation, node_modules exclusion,
@@ -15,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-22.04]
+        os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
 
