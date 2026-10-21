@@ -20,6 +20,16 @@ on:
       - main
       - master
 
+env:
+  APP_NAME: GreaterWMS
+  BASE_VERSION: 3.0.8
+  # Keep Python I/O in UTF-8 on every runner (Windows defaults to cp1252)
+  PYTHONUTF8: '1'
+  PYTHONIOENCODING: 'utf-8'
+  # Nuitka stores downloaded tools (dependency walker, ccache, MSVC config)
+  # here; caching the directory avoids re-downloading on every run
+  NUITKA_CACHE_DIR: ${{ github.workspace }}/.nuitka-cache
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -35,33 +45,34 @@ jobs:
         with:
           python-version: '3.13'
 
-      # Toolchain setup per platform: Nuitka needs a C compiler and
-      # optionally ccache to speed up repeated C compilation.
-      - name: Setup Build Tools (Linux)
+      # Mirrors Nuitka-Action: ccache is installed on Linux only, where
+      # Nuitka detects it in PATH automatically. macOS and Windows runners
+      # already ship clang / MSVC, so no extra toolchain setup is needed.
+      - name: Install ccache (Linux)
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential ccache patchelf
+        run: sudo apt-get update && sudo apt-get install -y ccache
 
-      - name: Setup Build Tools (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          xcode-select -p || sudo xcode-select --install || true
-          brew install ccache || true
-
-      - name: Setup Build Tools (Windows)
-        if: runner.os == 'Windows'
-        run: choco install ccache -y --no-progress
+      - name: Cache Nuitka downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUITKA_CACHE_DIR }}
+          key: nuitka-${{ runner.os }}-${{ runner.arch }}-py313-${{ github.sha }}
+          restore-keys: |
+            nuitka-${{ runner.os }}-${{ runner.arch }}-py313-
+            nuitka-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install Dependencies
         run: |
           pip install bomiot
+          pip show bomiot
+          # Fail fast when pip silently falls back to a bomiot release that
+          # does not ship the bomiot_cmd wheel for this platform
+          python -c "import bomiot_cmd"
 
       - name: Bomiot Build
         run: bomiot build
         env:
           PYTHONPATH: "${{ github.workspace }}${{ runner.os == 'Windows' && ';' || ':' }}${{ github.workspace }}/bomiot"
-          PYTHONIOENCODING: "utf-8"
 
       - name: Clean .build directories
         shell: bash
