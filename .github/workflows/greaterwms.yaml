@@ -5,10 +5,16 @@ env:
   SPONSOR_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqGLuvJoRPwODFiW18OLrz9DeKBYKoNTY="
 
   APP_NAME: "GreaterWMS"
-  BASE_VERSION: "3.0.0"
+  BASE_VERSION: "3.0.8"
 # APP_NAME / BASE_VERSION / BASE_URL are read from launcher.py by `bomiot build`
 # itself. All Nuitka parameters, manifest generation, node_modules exclusion,
 # sponsor verification, and build.json are handled by `bomiot build`.
+  # Keep Python I/O in UTF-8 on every runner (Windows defaults to cp1252)
+  PYTHONUTF8: '1'
+  PYTHONIOENCODING: 'utf-8'
+  # Nuitka stores downloaded tools (dependency walker, ccache, MSVC config)
+  # here; caching the directory avoids re-downloading on every run
+  NUITKA_CACHE_DIR: ${{ github.workspace }}/.nuitka-cache
 
 on:
   push:
@@ -19,16 +25,6 @@ on:
     branches:
       - main
       - master
-
-env:
-  APP_NAME: GreaterWMS
-  BASE_VERSION: 3.0.8
-  # Keep Python I/O in UTF-8 on every runner (Windows defaults to cp1252)
-  PYTHONUTF8: '1'
-  PYTHONIOENCODING: 'utf-8'
-  # Nuitka stores downloaded tools (dependency walker, ccache, MSVC config)
-  # here; caching the directory avoids re-downloading on every run
-  NUITKA_CACHE_DIR: ${{ github.workspace }}/.nuitka-cache
 
 jobs:
   build:
