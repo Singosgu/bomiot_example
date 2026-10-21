@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-22.04]
+        os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
 
@@ -31,7 +31,6 @@ jobs:
         with:
           python-version: '3.11'
           architecture: 'x64'
-          cache: 'pip'
 
       - name: Install bomiot (brings nuitka, django, bomiot-cmd, etc.)
         run: |
