@@ -6,7 +6,7 @@ APScheduler==3.11.3
 asgiref==3.12.1
 blinker==1.9.0
 bomiot==1.3.12
-bomiot-cmd==0.1.46
+bomiot-cmd==0.1.47
 bomiot_asgi==0.6.34
 bomiot_message==0.4.6
 bomiot_pay==0.1.5
