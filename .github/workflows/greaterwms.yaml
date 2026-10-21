@@ -43,6 +43,7 @@ jobs:
           PYTHONIOENCODING: "utf-8"
 
       - name: Clean .build directories
+        shell: bash
         run: |
           find build -type d -name "*.build" -exec rm -rf {} + 2>/dev/null || true
 
