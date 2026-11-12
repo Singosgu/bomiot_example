@@ -48,8 +48,24 @@ jobs:
 
       # Ensure launcher.py has workers=1 (mirrors build.py ensure_launcher_workers_one)
       - name: Force workers=1 in launcher.py
+        shell: bash
         run: |
-          python -c "import re,os; p='launcher.py'; s=open(p,encoding='utf-8').read(); s=re.sub(r'workers\s*=\s*\d+','workers=1',s); s=re.sub(r'(os\.environ\.setdefault\(\s*\"WORKERS\"\s*,\s*)\"[^\"]*\"\s*\)',r'\g<1>\"1\")',s); open(p,'w',encoding='utf-8').write(s)"
+          python - <<'PY'
+          import re
+
+          with open("launcher.py", encoding="utf-8") as f:
+              content = f.read()
+
+          content = re.sub(r"workers\s*=\s*\d+", "workers=1", content)
+          content = re.sub(
+              r'(os\.environ\.setdefault\(\s*"WORKERS"\s*,\s*)"[^"]*"\s*\)',
+              r'\g<1>"1")',
+              content,
+          )
+
+          with open("launcher.py", "w", encoding="utf-8") as f:
+              f.write(content)
+          PY
 
       # Copy launcher.py -> {APP_NAME}.py (mirrors build.py)
       - name: Copy launcher.py to application entry point
