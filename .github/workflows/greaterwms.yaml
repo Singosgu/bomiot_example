@@ -72,6 +72,16 @@ jobs:
         run: |
           python -c "import os, shutil; shutil.copyfile('launcher.py', os.environ['APP_NAME'] + '.py')"
 
+      # Cache Nuitka C compilation cache on macOS (standard runner only has 3 vCPU)
+      - name: Cache Nuitka
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/Nuitka
+          key: nuitka-${{ runner.os }}-4.3.5-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            nuitka-${{ runner.os }}-4.3.5-
+
       # ------------------------------------------------------------------
       # Windows
       # ------------------------------------------------------------------
@@ -79,11 +89,10 @@ jobs:
         if: runner.os == 'Windows'
         with:
           jobs: 16
-          nuitka-version: main
+          nuitka-version: "4.3.5"
           script-name: ${{ env.APP_NAME }}.py
           mode: standalone
           assume-yes-for-downloads: true
-          show-progress: true
           lto: yes
           output-dir: build
           company-name: Bomiot
@@ -222,13 +231,11 @@ jobs:
       - uses: Nuitka/Nuitka-Action@main
         if: runner.os == 'macOS'
         with:
-          jobs: 16
-          nuitka-version: main
+          jobs: 4
+          nuitka-version: "4.3.5"
           script-name: ${{ env.APP_NAME }}.py
           mode: standalone
           assume-yes-for-downloads: true
-          show-progress: true
-          lto: yes
           output-dir: build
           company-name: Bomiot
           product-name: ${{ env.APP_NAME }}
@@ -364,11 +371,10 @@ jobs:
         if: runner.os == 'Linux'
         with:
           jobs: 16
-          nuitka-version: main
+          nuitka-version: "4.3.5"
           script-name: ${{ env.APP_NAME }}.py
           mode: standalone
           assume-yes-for-downloads: true
-          show-progress: true
           lto: yes
           output-dir: build
           company-name: Bomiot
@@ -377,7 +383,7 @@ jobs:
           file-version: ${{ env.BASE_VERSION }}
           product-version: ${{ env.BASE_VERSION }}
           copyright: Copyright (c) 2020 ${{ env.APP_NAME }}
-          linux-icon: logo.png
+          linux-app-icon: logo.png
           enable-plugins: tk-inter,anti-bloat
           module-parameter: django-settings-module=bomiot.server.server.settings
           include-package: |
