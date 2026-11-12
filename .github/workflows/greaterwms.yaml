@@ -72,6 +72,38 @@ jobs:
         run: |
           python -c "import os, shutil; shutil.copyfile('launcher.py', os.environ['APP_NAME'] + '.py')"
 
+      # Append builder.toml [build] entries to the hardcoded defaults below,
+      # mirroring build.py load_config() and build_compiler_args().
+      - name: Read builder.toml extras
+        shell: python
+        run: |
+          import os
+          import tomllib
+          from pathlib import Path
+
+          config = {}
+          path = Path("builder.toml")
+          if path.exists():
+              with path.open("rb") as file:
+                  config = tomllib.load(file).get("build", {})
+
+          keys = {
+              "include_packages": "BUILD_INCLUDE_PACKAGES",
+              "include_package_data": "BUILD_INCLUDE_PACKAGE_DATA",
+              "include_modules": "BUILD_INCLUDE_MODULES",
+              "nofollow_import_to": "BUILD_NOFOLLOW_IMPORT_TO",
+              "include_data_files": "BUILD_INCLUDE_DATA_FILES",
+              "include_data_dirs": "BUILD_INCLUDE_DATA_DIRS",
+              "noinclude_data_files": "BUILD_NOINCLUDE_DATA_FILES",
+          }
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
+              for key, env_name in keys.items():
+                  values = config.get(key, [])
+                  print(f"[builder] {key}: {values}")
+                  env_file.write(f"{env_name}<<BOMIOT_BUILDER_EOF\n")
+                  env_file.write("\n".join(values))
+                  env_file.write("\nBOMIOT_BUILDER_EOF\n")
+
       # Cache Nuitka C compilation cache on macOS (standard runner only has 3 vCPU)
       - name: Cache Nuitka
         if: runner.os == 'macOS'
@@ -134,14 +166,17 @@ jobs:
             corsheaders
             greaterwms
             PIL
+            ${{ env.BUILD_INCLUDE_PACKAGES }}
           # ---- include package data (mirrors DEFAULT_INCLUDE_PACKAGE_DATA) ----
           include-package-data: |
             django
             greaterwms
+            ${{ env.BUILD_INCLUDE_PACKAGE_DATA }}
           # ---- include modules (mirrors DEFAULT_INCLUDE_MODULES) ----
           include-module: |
             django.core.management
             bomiot_cmd
+            ${{ env.BUILD_INCLUDE_MODULES }}
           # ---- nofollow imports (mirrors DEFAULT_NOFOLLOW_IMPORT_TO) ----
           nofollow-import-to: |
             pandas.tests
@@ -153,6 +188,7 @@ jobs:
             bomiot.cmd.extends
             bomiot.cmd.file
             bomiot.cmd.newapi
+            ${{ env.BUILD_NOFOLLOW_IMPORT_TO }}
           # ---- include data files (mirrors DEFAULT_INCLUDE_DATA_FILES) ----
           include-data-files: |
             .gitignore=.gitignore
@@ -163,6 +199,8 @@ jobs:
             greaterwms/receiver.py=greaterwms/receiver.py
             greaterwms/files.py=greaterwms/files.py
             greaterwms/task.py=greaterwms/task.py
+            ${{ env.BUILD_INCLUDE_DATA_FILES }}
+          include-data-dir: ${{ env.BUILD_INCLUDE_DATA_DIRS }}
           # ---- noinclude data files (mirrors DEFAULT_NOINCLUDE_DATA_FILES) ----
           noinclude-data-files: |
             bomiot/*
@@ -219,6 +257,7 @@ jobs:
             **/*/node_modules/**/*
             */node_modules/*
             */node_modules/**/*
+            ${{ env.BUILD_NOINCLUDE_DATA_FILES }}
         env:
           DJANGO_SETTINGS_MODULE: "bomiot.server.server.settings"
           RUN_MAIN: "true"
@@ -278,12 +317,15 @@ jobs:
             corsheaders
             greaterwms
             PIL
+            ${{ env.BUILD_INCLUDE_PACKAGES }}
           include-package-data: |
             django
             greaterwms
+            ${{ env.BUILD_INCLUDE_PACKAGE_DATA }}
           include-module: |
             django.core.management
             bomiot_cmd
+            ${{ env.BUILD_INCLUDE_MODULES }}
           nofollow-import-to: |
             pandas.tests
             django.test
@@ -294,6 +336,7 @@ jobs:
             bomiot.cmd.extends
             bomiot.cmd.file
             bomiot.cmd.newapi
+            ${{ env.BUILD_NOFOLLOW_IMPORT_TO }}
           include-data-files: |
             .gitignore=.gitignore
             setup.ini=setup.ini
@@ -303,6 +346,8 @@ jobs:
             greaterwms/receiver.py=greaterwms/receiver.py
             greaterwms/files.py=greaterwms/files.py
             greaterwms/task.py=greaterwms/task.py
+            ${{ env.BUILD_INCLUDE_DATA_FILES }}
+          include-data-dir: ${{ env.BUILD_INCLUDE_DATA_DIRS }}
           noinclude-data-files: |
             bomiot/*
             bomiot/**/*
@@ -358,6 +403,7 @@ jobs:
             **/*/node_modules/**/*
             */node_modules/*
             */node_modules/**/*
+            ${{ env.BUILD_NOINCLUDE_DATA_FILES }}
         env:
           DJANGO_SETTINGS_MODULE: "bomiot.server.server.settings"
           RUN_MAIN: "true"
@@ -414,12 +460,15 @@ jobs:
             corsheaders
             greaterwms
             PIL
+            ${{ env.BUILD_INCLUDE_PACKAGES }}
           include-package-data: |
             django
             greaterwms
+            ${{ env.BUILD_INCLUDE_PACKAGE_DATA }}
           include-module: |
             django.core.management
             bomiot_cmd
+            ${{ env.BUILD_INCLUDE_MODULES }}
           nofollow-import-to: |
             pandas.tests
             django.test
@@ -430,6 +479,7 @@ jobs:
             bomiot.cmd.extends
             bomiot.cmd.file
             bomiot.cmd.newapi
+            ${{ env.BUILD_NOFOLLOW_IMPORT_TO }}
           include-data-files: |
             .gitignore=.gitignore
             setup.ini=setup.ini
@@ -439,6 +489,8 @@ jobs:
             greaterwms/receiver.py=greaterwms/receiver.py
             greaterwms/files.py=greaterwms/files.py
             greaterwms/task.py=greaterwms/task.py
+            ${{ env.BUILD_INCLUDE_DATA_FILES }}
+          include-data-dir: ${{ env.BUILD_INCLUDE_DATA_DIRS }}
           noinclude-data-files: |
             bomiot/*
             bomiot/**/*
@@ -494,6 +546,7 @@ jobs:
             **/*/node_modules/**/*
             */node_modules/*
             */node_modules/**/*
+            ${{ env.BUILD_NOINCLUDE_DATA_FILES }}
         env:
           DJANGO_SETTINGS_MODULE: "bomiot.server.server.settings"
           RUN_MAIN: "true"
