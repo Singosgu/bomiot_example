@@ -16,7 +16,7 @@ from PIL import Image, ImageTk
 
 
 app_name = "GreaterWMS"
-version = "3.0.0"
+version = "3.0.8"
 port = 8008
 base_url = "http://127.0.0.1:8000/"
 update_url = f"{base_url.rstrip('/')}/update/"
@@ -957,6 +957,20 @@ if __name__ == "__main__":
     print('System is starting up')
 
     port = _find_available_port(port)
+
+    # Write client instance info for cross-project update discovery
+    import json as _json
+    import uuid as _uuid
+    _client_info = {
+        "app_name": app_name,
+        "version": version,
+        "port": port,
+        "base_url": base_url,
+        "update_url": update_url,
+        "hash": _uuid.uuid4().hex,
+    }
+    with open(join(os.path.dirname(sys.executable), "client.json"), "w", encoding="utf-8") as _f:
+        _json.dump(_client_info, _f, ensure_ascii=False, indent=2)
 
     print('System started successfully')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

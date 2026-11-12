@@ -1,0 +1,588 @@
+name: Bomiot Build
+env:
+  APP_NAME: "GreaterWMS"
+  BASE_VERSION: "3.0.8"
+  COMMUNITY_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqCKStJYJO21-Mcx4MyJw5lQABNnjUH2mBlA=="
+  SPONSOR_KEY: "MDA6RTA6NEU6MTA61fJBMUIaiKXj6w3JctaeAroqGLuvJoRPwODFiW18OLrz9DeKBYKoNTY="
+
+# APP_NAME / BASE_VERSION and auth keys are supplied through env.
+# Nuitka-Action mirrors `bomiot build`; post-processing writes build.json and manifest.
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+
+      # Check-out repository
+      - uses: actions/checkout@v4
+
+      # Setup Python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11 # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+          cache: 'pip'
+          cache-dependency-path: |
+            **/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pillow
+          pip install -r requirements.txt
+
+      # Generate apps.json (mirrors build.py generate_apps_json)
+      - name: Generate apps.json
+        run: |
+          python -c "import sys, os; sys.path.insert(0, os.getcwd()); from discovered_apps import main; sys.argv=[sys.argv[0]]; main(os.getcwd())"
+
+      # Ensure launcher.py has workers=1 (mirrors build.py ensure_launcher_workers_one)
+      - name: Force workers=1 in launcher.py
+        run: |
+          python -c "import re,os; p='launcher.py'; s=open(p,encoding='utf-8').read(); s=re.sub(r'workers\s*=\s*\d+','workers=1',s); s=re.sub(r'(os\.environ\.setdefault\(\s*\"WORKERS\"\s*,\s*)\"[^\"]*\"\s*\)',r'\g<1>\"1\")',s); open(p,'w',encoding='utf-8').write(s)"
+
+      # Copy launcher.py -> {APP_NAME}.py (mirrors build.py)
+      - name: Copy launcher.py to application entry point
+        run: |
+          python -c "import os, shutil; shutil.copyfile('launcher.py', os.environ['APP_NAME'] + '.py')"
+
+      # ------------------------------------------------------------------
+      # Windows
+      # ------------------------------------------------------------------
+      - uses: Nuitka/Nuitka-Action@main
+        if: runner.os == 'Windows'
+        with:
+          jobs: 16
+          nuitka-version: main
+          script-name: ${{ env.APP_NAME }}.py
+          mode: standalone
+          assume-yes-for-downloads: true
+          show-progress: true
+          lto: yes
+          output-dir: build
+          company-name: Bomiot
+          product-name: ${{ env.APP_NAME }}
+          file-description: No-environment delivery tool for Python apps Compile to binary · Cross-platform · Incremental updates · Source code protection
+          file-version: ${{ env.BASE_VERSION }}
+          product-version: ${{ env.BASE_VERSION }}
+          copyright: Copyright (c) 2020 ${{ env.APP_NAME }}
+          windows-icon-from-ico: logo.ico
+          windows-console-mode: disable
+          enable-plugins: tk-inter,anti-bloat
+          module-parameter: django-settings-module=bomiot.server.server.settings
+          # ---- include packages (mirrors DEFAULT_INCLUDE_PACKAGES) ----
+          include-package: |
+            bomiot
+            django
+            fastapi
+            flask
+            orjson
+            uvicorn
+            pandas
+            openpyxl
+            watchdog
+            tomlkit
+            psutil
+            xlsxwriter
+            requests
+            httptools
+            aiofiles
+            starlette
+            bomiot_asgi
+            bomiot_message
+            bomiot_token
+            bomiot_pay
+            django_filters
+            rest_framework
+            rest_framework_csv
+            django_apscheduler
+            corsheaders
+            greaterwms
+            PIL
+          # ---- include package data (mirrors DEFAULT_INCLUDE_PACKAGE_DATA) ----
+          include-package-data: |
+            django
+            greaterwms
+          # ---- include modules (mirrors DEFAULT_INCLUDE_MODULES) ----
+          include-module: |
+            django.core.management
+            bomiot_cmd
+          # ---- nofollow imports (mirrors DEFAULT_NOFOLLOW_IMPORT_TO) ----
+          nofollow-import-to: |
+            pandas.tests
+            django.test
+            rest_framework.tests
+            IPython
+            pytest
+            unittest
+            bomiot.cmd.extends
+            bomiot.cmd.file
+            bomiot.cmd.newapi
+          # ---- include data files (mirrors DEFAULT_INCLUDE_DATA_FILES) ----
+          include-data-files: |
+            .gitignore=.gitignore
+            setup.ini=setup.ini
+            splash.png=splash.png
+            apps.json=apps.json
+            greaterwms/server.py=greaterwms/server.py
+            greaterwms/receiver.py=greaterwms/receiver.py
+            greaterwms/files.py=greaterwms/files.py
+            greaterwms/task.py=greaterwms/task.py
+          # ---- noinclude data files (mirrors DEFAULT_NOINCLUDE_DATA_FILES) ----
+          noinclude-data-files: |
+            bomiot/*
+            bomiot/**/*
+            greaterwms/templates/src/*
+            greaterwms/templates/src/**/*
+            greaterwms/templates/public/*
+            greaterwms/templates/public/**/*
+            greaterwms/templates/.quasar/*
+            greaterwms/templates/.quasar/**/*
+            greaterwms/templates/package.json
+            greaterwms/templates/package-lock.json
+            greaterwms/templates/yarn.lock
+            greaterwms/templates/.gitignore
+            greaterwms/templates/.npmrc
+            greaterwms/templates/.editorconfig
+            greaterwms/templates/.prettierrc.json
+            greaterwms/templates/babel.config.js
+            greaterwms/templates/quasar.config.js
+            greaterwms/templates/postcss.config.js
+            greaterwms/templates/jsconfig.json
+            greaterwms/templates/eslint.config.js
+            greaterwms/templates/README.md
+            greaterwms/templates/index.html
+            greaterwms2/templates/src/*
+            greaterwms2/templates/src/**/*
+            greaterwms2/templates/public/*
+            greaterwms2/templates/public/**/*
+            greaterwms2/templates/.quasar/*
+            greaterwms2/templates/.quasar/**/*
+            greaterwms2/templates/package.json
+            greaterwms2/templates/package-lock.json
+            greaterwms2/templates/yarn.lock
+            greaterwms2/templates/.gitignore
+            greaterwms2/templates/.npmrc
+            greaterwms2/templates/.editorconfig
+            greaterwms2/templates/.prettierrc.json
+            greaterwms2/templates/babel.config.js
+            greaterwms2/templates/quasar.config.js
+            greaterwms2/templates/postcss.config.js
+            greaterwms2/templates/jsconfig.json
+            greaterwms2/templates/eslint.config.js
+            greaterwms2/templates/README.md
+            greaterwms2/templates/index.html
+            **/*/src/*
+            **/*/src/**/*
+            */src/*
+            */src/**/*
+            **/*/public/*
+            **/*/public/**/*
+            */public/*
+            */public/**/*
+            **/*/node_modules/*
+            **/*/node_modules/**/*
+            */node_modules/*
+            */node_modules/**/*
+        env:
+          DJANGO_SETTINGS_MODULE: "bomiot.server.server.settings"
+          RUN_MAIN: "true"
+          PYTHONPATH: "${{ github.workspace }};${{ github.workspace }}/bomiot"
+          PYTHONIOENCODING: "utf-8"
+
+      # ------------------------------------------------------------------
+      # macOS
+      # ------------------------------------------------------------------
+      - uses: Nuitka/Nuitka-Action@main
+        if: runner.os == 'macOS'
+        with:
+          jobs: 16
+          nuitka-version: main
+          script-name: ${{ env.APP_NAME }}.py
+          mode: standalone
+          assume-yes-for-downloads: true
+          show-progress: true
+          lto: yes
+          output-dir: build
+          company-name: Bomiot
+          product-name: ${{ env.APP_NAME }}
+          file-description: No-environment delivery tool for Python apps Compile to binary · Cross-platform · Incremental updates · Source code protection
+          file-version: ${{ env.BASE_VERSION }}
+          product-version: ${{ env.BASE_VERSION }}
+          copyright: Copyright (c) 2020 ${{ env.APP_NAME }}
+          macos-app-icon: logo.icns
+          macos-app-name: ${{ env.APP_NAME }}
+          macos-app-version: ${{ env.BASE_VERSION }}
+          macos-signed-app-name: ${{ env.APP_NAME }}
+          macos-app-console-mode: force
+          enable-plugins: tk-inter,anti-bloat
+          module-parameter: django-settings-module=bomiot.server.server.settings
+          include-package: |
+            bomiot
+            django
+            fastapi
+            flask
+            orjson
+            uvicorn
+            pandas
+            openpyxl
+            watchdog
+            tomlkit
+            psutil
+            xlsxwriter
+            requests
+            httptools
+            aiofiles
+            starlette
+            bomiot_asgi
+            bomiot_message
+            bomiot_token
+            bomiot_pay
+            django_filters
+            rest_framework
+            rest_framework_csv
+            django_apscheduler
+            corsheaders
+            greaterwms
+            PIL
+          include-package-data: |
+            django
+            greaterwms
+          include-module: |
+            django.core.management
+            bomiot_cmd
+          nofollow-import-to: |
+            pandas.tests
+            django.test
+            rest_framework.tests
+            IPython
+            pytest
+            unittest
+            bomiot.cmd.extends
+            bomiot.cmd.file
+            bomiot.cmd.newapi
+          include-data-files: |
+            .gitignore=.gitignore
+            setup.ini=setup.ini
+            splash.png=splash.png
+            apps.json=apps.json
+            greaterwms/server.py=greaterwms/server.py
+            greaterwms/receiver.py=greaterwms/receiver.py
+            greaterwms/files.py=greaterwms/files.py
+            greaterwms/task.py=greaterwms/task.py
+          noinclude-data-files: |
+            bomiot/*
+            bomiot/**/*
+            greaterwms/templates/src/*
+            greaterwms/templates/src/**/*
+            greaterwms/templates/public/*
+            greaterwms/templates/public/**/*
+            greaterwms/templates/.quasar/*
+            greaterwms/templates/.quasar/**/*
+            greaterwms/templates/package.json
+            greaterwms/templates/package-lock.json
+            greaterwms/templates/yarn.lock
+            greaterwms/templates/.gitignore
+            greaterwms/templates/.npmrc
+            greaterwms/templates/.editorconfig
+            greaterwms/templates/.prettierrc.json
+            greaterwms/templates/babel.config.js
+            greaterwms/templates/quasar.config.js
+            greaterwms/templates/postcss.config.js
+            greaterwms/templates/jsconfig.json
+            greaterwms/templates/eslint.config.js
+            greaterwms/templates/README.md
+            greaterwms/templates/index.html
+            greaterwms2/templates/src/*
+            greaterwms2/templates/src/**/*
+            greaterwms2/templates/public/*
+            greaterwms2/templates/public/**/*
+            greaterwms2/templates/.quasar/*
+            greaterwms2/templates/.quasar/**/*
+            greaterwms2/templates/package.json
+            greaterwms2/templates/package-lock.json
+            greaterwms2/templates/yarn.lock
+            greaterwms2/templates/.gitignore
+            greaterwms2/templates/.npmrc
+            greaterwms2/templates/.editorconfig
+            greaterwms2/templates/.prettierrc.json
+            greaterwms2/templates/babel.config.js
+            greaterwms2/templates/quasar.config.js
+            greaterwms2/templates/postcss.config.js
+            greaterwms2/templates/jsconfig.json
+            greaterwms2/templates/eslint.config.js
+            greaterwms2/templates/README.md
+            greaterwms2/templates/index.html
+            **/*/src/*
+            **/*/src/**/*
+            */src/*
+            */src/**/*
+            **/*/public/*
+            **/*/public/**/*
+            */public/*
+            */public/**/*
+            **/*/node_modules/*
+            **/*/node_modules/**/*
+            */node_modules/*
+            */node_modules/**/*
+        env:
+          DJANGO_SETTINGS_MODULE: "bomiot.server.server.settings"
+          RUN_MAIN: "true"
+          PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/bomiot"
+          PYTHONIOENCODING: "utf-8"
+
+      # ------------------------------------------------------------------
+      # Linux
+      # ------------------------------------------------------------------
+      - uses: Nuitka/Nuitka-Action@main
+        if: runner.os == 'Linux'
+        with:
+          jobs: 16
+          nuitka-version: main
+          script-name: ${{ env.APP_NAME }}.py
+          mode: standalone
+          assume-yes-for-downloads: true
+          show-progress: true
+          lto: yes
+          output-dir: build
+          company-name: Bomiot
+          product-name: ${{ env.APP_NAME }}
+          file-description: No-environment delivery tool for Python apps Compile to binary · Cross-platform · Incremental updates · Source code protection
+          file-version: ${{ env.BASE_VERSION }}
+          product-version: ${{ env.BASE_VERSION }}
+          copyright: Copyright (c) 2020 ${{ env.APP_NAME }}
+          linux-icon: logo.png
+          enable-plugins: tk-inter,anti-bloat
+          module-parameter: django-settings-module=bomiot.server.server.settings
+          include-package: |
+            bomiot
+            django
+            fastapi
+            flask
+            orjson
+            uvicorn
+            pandas
+            openpyxl
+            watchdog
+            tomlkit
+            psutil
+            xlsxwriter
+            requests
+            httptools
+            aiofiles
+            starlette
+            bomiot_asgi
+            bomiot_message
+            bomiot_token
+            bomiot_pay
+            django_filters
+            rest_framework
+            rest_framework_csv
+            django_apscheduler
+            corsheaders
+            greaterwms
+            PIL
+          include-package-data: |
+            django
+            greaterwms
+          include-module: |
+            django.core.management
+            bomiot_cmd
+          nofollow-import-to: |
+            pandas.tests
+            django.test
+            rest_framework.tests
+            IPython
+            pytest
+            unittest
+            bomiot.cmd.extends
+            bomiot.cmd.file
+            bomiot.cmd.newapi
+          include-data-files: |
+            .gitignore=.gitignore
+            setup.ini=setup.ini
+            splash.png=splash.png
+            apps.json=apps.json
+            greaterwms/server.py=greaterwms/server.py
+            greaterwms/receiver.py=greaterwms/receiver.py
+            greaterwms/files.py=greaterwms/files.py
+            greaterwms/task.py=greaterwms/task.py
+          noinclude-data-files: |
+            bomiot/*
+            bomiot/**/*
+            greaterwms/templates/src/*
+            greaterwms/templates/src/**/*
+            greaterwms/templates/public/*
+            greaterwms/templates/public/**/*
+            greaterwms/templates/.quasar/*
+            greaterwms/templates/.quasar/**/*
+            greaterwms/templates/package.json
+            greaterwms/templates/package-lock.json
+            greaterwms/templates/yarn.lock
+            greaterwms/templates/.gitignore
+            greaterwms/templates/.npmrc
+            greaterwms/templates/.editorconfig
+            greaterwms/templates/.prettierrc.json
+            greaterwms/templates/babel.config.js
+            greaterwms/templates/quasar.config.js
+            greaterwms/templates/postcss.config.js
+            greaterwms/templates/jsconfig.json
+            greaterwms/templates/eslint.config.js
+            greaterwms/templates/README.md
+            greaterwms/templates/index.html
+            greaterwms2/templates/src/*
+            greaterwms2/templates/src/**/*
+            greaterwms2/templates/public/*
+            greaterwms2/templates/public/**/*
+            greaterwms2/templates/.quasar/*
+            greaterwms2/templates/.quasar/**/*
+            greaterwms2/templates/package.json
+            greaterwms2/templates/package-lock.json
+            greaterwms2/templates/yarn.lock
+            greaterwms2/templates/.gitignore
+            greaterwms2/templates/.npmrc
+            greaterwms2/templates/.editorconfig
+            greaterwms2/templates/.prettierrc.json
+            greaterwms2/templates/babel.config.js
+            greaterwms2/templates/quasar.config.js
+            greaterwms2/templates/postcss.config.js
+            greaterwms2/templates/jsconfig.json
+            greaterwms2/templates/eslint.config.js
+            greaterwms2/templates/README.md
+            greaterwms2/templates/index.html
+            **/*/src/*
+            **/*/src/**/*
+            */src/*
+            */src/**/*
+            **/*/public/*
+            **/*/public/**/*
+            */public/*
+            */public/**/*
+            **/*/node_modules/*
+            **/*/node_modules/**/*
+            */node_modules/*
+            */node_modules/**/*
+        env:
+          DJANGO_SETTINGS_MODULE: "bomiot.server.server.settings"
+          RUN_MAIN: "true"
+          PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/bomiot"
+          PYTHONIOENCODING: "utf-8"
+
+      # Rename output, write build.json, and generate the incremental-update manifest
+      - name: Generate build.json and manifest
+        shell: python
+        run: |
+          import hashlib
+          import json
+          import os
+          import platform
+          import shutil
+
+          app_name = os.environ["APP_NAME"]
+          version = os.environ["BASE_VERSION"]
+          community_key = os.environ.get("COMMUNITY_KEY", "")
+          sponsor_key = os.environ.get("SPONSOR_KEY", "")
+          if not community_key or not sponsor_key:
+              raise RuntimeError("COMMUNITY_KEY / SPONSOR_KEY not set")
+
+          system = platform.system()
+          if system == "Windows":
+              os_label, display = "windows", "Windows"
+          elif system == "Darwin":
+              os_label, display = "macos", "macOS"
+          else:
+              os_label, display = "linux", "Linux"
+          arch = "arm64" if platform.machine().lower() in ("arm64", "aarch64") else "x64"
+
+          folder_name = f"{app_name}-{version}-{display}"
+          output_dir = os.path.join("build", folder_name)
+          dist_dir = os.path.join("build", f"{app_name}.dist")
+          app_bundle = os.path.join("build", f"{app_name}.app")
+
+          if os.path.exists(output_dir):
+              shutil.rmtree(output_dir)
+          if os.path.isdir(dist_dir):
+              shutil.move(dist_dir, output_dir)
+          elif os.path.isdir(app_bundle):
+              shutil.move(app_bundle, output_dir)
+          else:
+              raise RuntimeError(f"Build output not found: {dist_dir} or {app_bundle}")
+
+          for root, dirs, _ in os.walk(output_dir):
+              if "node_modules" in dirs:
+                  shutil.rmtree(os.path.join(root, "node_modules"))
+                  dirs.remove("node_modules")
+
+          payload = {
+              "COMMUNITY_KEY": community_key,
+              "SPONSOR_KEY": sponsor_key,
+          }
+          build_json_path = os.path.join(output_dir, "build.json")
+          with open(build_json_path, "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False, indent=2)
+
+          block_size = int(0.25 * 1024 * 1024)
+          block_threshold = 1 * 1024 * 1024
+          manifest_name = f"manifest--{app_name}-{os_label}-{arch}.json"
+          files = {}
+
+          for root, _, filenames in os.walk(output_dir):
+              for filename in filenames:
+                  if filename == manifest_name:
+                      continue
+                  full_path = os.path.join(root, filename)
+                  relative_path = os.path.relpath(full_path, output_dir).replace(os.sep, "/")
+                  file_size = os.path.getsize(full_path)
+
+                  if file_size >= block_threshold:
+                      full_hash = hashlib.sha256()
+                      blocks = []
+                      with open(full_path, "rb") as f:
+                          while True:
+                              chunk = f.read(block_size)
+                              if not chunk:
+                                  break
+                              full_hash.update(chunk)
+                              blocks.append(hashlib.sha256(chunk).hexdigest())
+                      files[relative_path] = {
+                          "size": file_size,
+                          "sha256": full_hash.hexdigest(),
+                          "block_size": block_size,
+                          "blocks": blocks,
+                      }
+                  else:
+                      with open(full_path, "rb") as f:
+                          files[relative_path] = hashlib.sha256(f.read()).hexdigest()
+
+          manifest = {
+              "app_name": app_name,
+              "version": version,
+              "os": os_label,
+              "arch": arch,
+              "files": files,
+          }
+          manifest_path = os.path.join(output_dir, manifest_name)
+          with open(manifest_path, "w", encoding="utf-8") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+          shutil.copyfile(manifest_path, os.path.join("build", manifest_name))
+          print(f"Generated {build_json_path} and {manifest_path}: {len(files)} files")
+
+      # Uploads artifact
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ env.BASE_VERSION }}-${{ runner.os }}
+          path: |
+            build/${{ env.APP_NAME }}-${{ env.BASE_VERSION }}-*/**/*
+            build/manifest--${{ env.APP_NAME }}-*.json
+          include-hidden-files: true
